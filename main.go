@@ -25,7 +25,12 @@ type checkResult struct {
 // Removes the prowler header from the json out, and correctly formats the rest into a json array
 func correct(raw []byte) []byte {
 	parsed := string(raw)
+
 	start := strings.Index(parsed, "{")
+	if start < 2 {
+		return raw // likely the input has already been fixed
+	}
+
 	result := "[" + strings.Replace(parsed[start:], "}", "},", -1) + "]"
 	final := strings.Replace(result, "},\n]", "}]", 1)
 	return []byte(final)
