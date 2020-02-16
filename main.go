@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 )
 
 type checkResult struct {
@@ -19,6 +20,15 @@ type checkResult struct {
 	ControlID     string `json:"Control ID"`
 	Region        string
 	Timestamp     string
+}
+
+// Removes the prowler header from the json out, and correctly formats the rest into a json array
+func correct(raw []byte) []byte {
+	parsed := string(raw)
+	start := strings.Index(parsed, "{")
+	result := "[" + strings.Replace(parsed[start:], "}", "},", -1) + "]"
+	final := strings.Replace(result, "},\n]", "}]", 1)
+	return []byte(final)
 }
 
 func main() {
@@ -39,6 +49,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	raw = correct(raw)
 
 	var checkResults []checkResult
 	err = json.Unmarshal(raw, &checkResults)
