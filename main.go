@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -82,11 +81,11 @@ func main() {
 
 	log.Print("\nScored Fails\n============\n\n")
 	for _, r := range scored {
-		fmt.Printf("%s\n%s - %s\n%s\n\n", r.Control, r.ControlID, r.Level, r.Message)
+		log.Printf("%s\n%s - %s\n%s\n\n", r.Control, r.ControlID, r.Level, r.Message)
 	}
 
 	log.Print("\nUnscored Fails\n==============\n\n")
 	for _, r := range unscored {
-		fmt.Printf("%s\n%s - %s\n%s\n\n", r.Control, r.ControlID, r.Level, r.Message)
+		log.Printf("%s\n%s - %s\n%s\n\n", r.Control, r.ControlID, r.Level, r.Message)
 	}
 }
