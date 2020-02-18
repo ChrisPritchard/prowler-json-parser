@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -35,11 +36,36 @@ func correct(raw []byte) []byte {
 	return []byte(final)
 }
 
+func writeCsv(fileName string, results []checkResult) {
+	csv := ""
+	for _, r := range results {
+		csv += fmt.Sprintf("%s,%s,%s,%s\n", r.Control, r.ControlID, r.Level, r.Message)
+	}
+	ioutil.WriteFile(fileName, []byte(csv), 0644)
+}
+
+func printOutput(totalLength int, scored []checkResult, unscored []checkResult) {
+	log.Printf("%d checks in total\n", totalLength)
+	failureTotal := len(scored) + len(unscored)
+	percent := int(float32(failureTotal) / float32(totalLength) * 100)
+	log.Printf("%d failures (roughly %d percent)\n", failureTotal, percent)
+
+	log.Print("\nScored Fails\n============\n\n")
+	for _, r := range scored {
+		log.Printf("%s\n%s - %s\n%s\n\n", r.Control, r.ControlID, r.Level, r.Message)
+	}
+
+	log.Print("\nUnscored Fails\n==============\n\n")
+	for _, r := range unscored {
+		log.Printf("%s\n%s - %s\n%s\n\n", r.Control, r.ControlID, r.Level, r.Message)
+	}
+}
+
 func main() {
 	log.SetFlags(0) // Disable log timestamp
 
-	if len(os.Args) != 2 {
-		log.Fatal("Please provide a prowler output file (from -M json) as the first argument")
+	if len(os.Args) == 1 {
+		log.Fatal("Please provide a prowler output file (from -M json) as the first argument.\nOptionally pass -p as the second argument to print results instead of writing CSVs.")
 	}
 
 	jsonFile, err := os.Open(os.Args[1])
@@ -74,18 +100,10 @@ func main() {
 		}
 	}
 
-	log.Printf("%d checks in total\n", len(checkResults))
-	failureTotal := len(scored) + len(unscored)
-	percent := int(float32(failureTotal) / float32(len(checkResults)) * 100)
-	log.Printf("%d failures (roughly %d percent)\n", failureTotal, percent)
-
-	log.Print("\nScored Fails\n============\n\n")
-	for _, r := range scored {
-		log.Printf("%s\n%s - %s\n%s\n\n", r.Control, r.ControlID, r.Level, r.Message)
-	}
-
-	log.Print("\nUnscored Fails\n==============\n\n")
-	for _, r := range unscored {
-		log.Printf("%s\n%s - %s\n%s\n\n", r.Control, r.ControlID, r.Level, r.Message)
+	if len(os.Args) == 3 && os.Args[2] == "-p" {
+		printOutput(len(checkResults), scored, unscored)
+	} else {
+		writeCsv(os.Args[1]+"-scored.csv", scored)
+		writeCsv(os.Args[1]+"-unscored.csv", unscored)
 	}
 }
